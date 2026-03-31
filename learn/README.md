@@ -39,6 +39,9 @@ Start from the top and work down, or jump to whatever interests you:
 | 7 | [Extension Model](./07-extension-model.md) | Skills, plugins, hooks, sub-agents, and swarms |
 | 8 | [API Client](./08-api-client.md) | `claude.ts` — streaming, retries, caching, and model fallback |
 | 9 | [UI Architecture](./09-ui-architecture.md) | React Ink, 113 components, and the 896KB REPL |
+| 10 | [Configuration and System Prompt](./10-configuration-and-system-prompt.md) | Settings hierarchy, CLAUDE.md discovery, prompt assembly |
+| 11 | [MCP Deep Dive](./11-mcp-deep-dive.md) | Transports, tool wrapping, auth, server lifecycle |
+| 12 | [Data Flow Walkthrough](./12-data-flow-walkthrough.md) | End-to-end trace of a single user request |
 
 ---
 

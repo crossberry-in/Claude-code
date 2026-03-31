@@ -106,4 +106,4 @@ Custom hooks encapsulate complex logic:
 
 ---
 
-**Previous:** [← API Client](./08-api-client.md)
+**Previous:** [<- API Client](./08-api-client.md) | **Next:** [Configuration and System Prompt ->](./10-configuration-and-system-prompt.md)
