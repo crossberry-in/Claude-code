@@ -360,6 +360,6 @@ type PermissionDecisionReason =
 
 ## Navigation
 
-- 이전: [Tool 시스템](tool-system.md)
+- 이전: [커맨드 시스템](command-system.md)
 - 다음: [에이전트 오케스트레이션](agent-coordinator.md)
 - 상위: [목차](../README.md)

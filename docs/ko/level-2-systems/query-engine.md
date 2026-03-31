@@ -15,7 +15,7 @@ graph TD
     QE["QueryEngine\n(src/QueryEngine.ts)"]
     ASK["ask()\n편의 래퍼"]
     QUERY["query()\n(src/query.ts)"]
-    CLAUDE["services/api/claude.ts\nAnthropics API 클라이언트"]
+    CLAUDE["services/api/claude.ts\nAnthropic API 클라이언트"]
     TOOLS["Tool 시스템\n(src/Tool.ts)"]
     COST["cost-tracker.ts\n비용·토큰 집계"]
     COMPACT["services/compact/\n컨텍스트 압축"]
