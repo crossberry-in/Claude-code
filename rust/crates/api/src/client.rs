@@ -23,6 +23,7 @@ pub enum ProviderClient {
     ClawApi(ClawApiClient),
     Xai(OpenAiCompatClient),
     OpenAi(OpenAiCompatClient),
+    Nvidia(OpenAiCompatClient),
 }
 
 impl ProviderClient {
@@ -46,6 +47,9 @@ impl ProviderClient {
             ProviderKind::OpenAi => Ok(Self::OpenAi(OpenAiCompatClient::from_env(
                 OpenAiCompatConfig::openai(),
             )?)),
+            ProviderKind::Nvidia => Ok(Self::Nvidia(OpenAiCompatClient::from_env(
+                OpenAiCompatConfig::nvidia(),
+            )?)),
         }
     }
 
@@ -55,6 +59,7 @@ impl ProviderClient {
             Self::ClawApi(_) => ProviderKind::ClawApi,
             Self::Xai(_) => ProviderKind::Xai,
             Self::OpenAi(_) => ProviderKind::OpenAi,
+            Self::Nvidia(_) => ProviderKind::Nvidia,
         }
     }
 
@@ -64,7 +69,9 @@ impl ProviderClient {
     ) -> Result<MessageResponse, ApiError> {
         match self {
             Self::ClawApi(client) => send_via_provider(client, request).await,
-            Self::Xai(client) | Self::OpenAi(client) => send_via_provider(client, request).await,
+            Self::Xai(client) | Self::OpenAi(client) | Self::Nvidia(client) => {
+                send_via_provider(client, request).await
+            }
         }
     }
 
@@ -76,9 +83,11 @@ impl ProviderClient {
             Self::ClawApi(client) => stream_via_provider(client, request)
                 .await
                 .map(MessageStream::ClawApi),
-            Self::Xai(client) | Self::OpenAi(client) => stream_via_provider(client, request)
-                .await
-                .map(MessageStream::OpenAiCompat),
+            Self::Xai(client) | Self::OpenAi(client) | Self::Nvidia(client) => {
+                stream_via_provider(client, request)
+                    .await
+                    .map(MessageStream::OpenAiCompat)
+            }
         }
     }
 }
@@ -119,6 +128,11 @@ pub fn read_xai_base_url() -> String {
     openai_compat::read_base_url(OpenAiCompatConfig::xai())
 }
 
+#[must_use]
+pub fn read_nvidia_base_url() -> String {
+    openai_compat::read_base_url(OpenAiCompatConfig::nvidia())
+}
+
 #[cfg(test)]
 mod tests {
     use crate::providers::{detect_provider_kind, resolve_model_alias, ProviderKind};
@@ -128,11 +142,16 @@ mod tests {
         assert_eq!(resolve_model_alias("opus"), "claude-opus-4-6");
         assert_eq!(resolve_model_alias("grok"), "grok-3");
         assert_eq!(resolve_model_alias("grok-mini"), "grok-3-mini");
+        assert_eq!(resolve_model_alias("nvidia"), "meta/llama-3.3-70b-instruct");
     }
 
     #[test]
     fn provider_detection_prefers_model_family() {
         assert_eq!(detect_provider_kind("grok-3"), ProviderKind::Xai);
+        assert_eq!(
+            detect_provider_kind("meta/llama-3.3-70b-instruct"),
+            ProviderKind::Nvidia
+        );
         assert_eq!(
             detect_provider_kind("claude-sonnet-4-6"),
             ProviderKind::ClawApi

@@ -1,7 +1,9 @@
 use std::ffi::OsString;
 use std::sync::{Mutex, OnceLock};
 
-use api::{read_xai_base_url, ApiError, AuthSource, ProviderClient, ProviderKind};
+use api::{
+    read_nvidia_base_url, read_xai_base_url, ApiError, AuthSource, ProviderClient, ProviderKind,
+};
 
 #[test]
 fn provider_client_routes_grok_aliases_through_xai() {
@@ -51,6 +53,42 @@ fn read_xai_base_url_prefers_env_override() {
     let _xai_base_url = EnvVarGuard::set("XAI_BASE_URL", Some("https://example.xai.test/v1"));
 
     assert_eq!(read_xai_base_url(), "https://example.xai.test/v1");
+}
+
+#[test]
+fn provider_client_routes_nvidia_aliases_through_openai_compat() {
+    let _lock = env_lock();
+    let _nvidia_api_key = EnvVarGuard::set("NVIDIA_API_KEY", Some("nvidia-test-key"));
+
+    let client = ProviderClient::from_model("nvidia").expect("nvidia alias should resolve");
+
+    assert_eq!(client.provider_kind(), ProviderKind::Nvidia);
+}
+
+#[test]
+fn provider_client_reports_missing_nvidia_credentials_for_nvidia_models() {
+    let _lock = env_lock();
+    let _nvidia_api_key = EnvVarGuard::set("NVIDIA_API_KEY", None);
+
+    let error = ProviderClient::from_model("meta/llama-3.3-70b-instruct")
+        .expect_err("nvidia requests without NVIDIA_API_KEY should fail fast");
+
+    match error {
+        ApiError::MissingCredentials { provider, env_vars } => {
+            assert_eq!(provider, "NVIDIA");
+            assert_eq!(env_vars, &["NVIDIA_API_KEY"]);
+        }
+        other => panic!("expected missing NVIDIA credentials, got {other:?}"),
+    }
+}
+
+#[test]
+fn read_nvidia_base_url_prefers_env_override() {
+    let _lock = env_lock();
+    let _nvidia_base_url =
+        EnvVarGuard::set("NVIDIA_BASE_URL", Some("https://example.nvidia.test/v1"));
+
+    assert_eq!(read_nvidia_base_url(), "https://example.nvidia.test/v1");
 }
 
 fn env_lock() -> std::sync::MutexGuard<'static, ()> {

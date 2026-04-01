@@ -28,6 +28,7 @@ pub enum ProviderKind {
     ClawApi,
     Xai,
     OpenAi,
+    Nvidia,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -138,6 +139,42 @@ const MODEL_REGISTRY: &[(&str, ProviderMetadata)] = &[
             default_base_url: openai_compat::DEFAULT_XAI_BASE_URL,
         },
     ),
+    (
+        "nvidia",
+        ProviderMetadata {
+            provider: ProviderKind::Nvidia,
+            auth_env: "NVIDIA_API_KEY",
+            base_url_env: "NVIDIA_BASE_URL",
+            default_base_url: openai_compat::DEFAULT_NVIDIA_BASE_URL,
+        },
+    ),
+    (
+        "meta/llama-3.3-70b-instruct",
+        ProviderMetadata {
+            provider: ProviderKind::Nvidia,
+            auth_env: "NVIDIA_API_KEY",
+            base_url_env: "NVIDIA_BASE_URL",
+            default_base_url: openai_compat::DEFAULT_NVIDIA_BASE_URL,
+        },
+    ),
+    (
+        "qwen/qwen2.5-coder-32b-instruct",
+        ProviderMetadata {
+            provider: ProviderKind::Nvidia,
+            auth_env: "NVIDIA_API_KEY",
+            base_url_env: "NVIDIA_BASE_URL",
+            default_base_url: openai_compat::DEFAULT_NVIDIA_BASE_URL,
+        },
+    ),
+    (
+        "deepseek-ai/deepseek-r1",
+        ProviderMetadata {
+            provider: ProviderKind::Nvidia,
+            auth_env: "NVIDIA_API_KEY",
+            base_url_env: "NVIDIA_BASE_URL",
+            default_base_url: openai_compat::DEFAULT_NVIDIA_BASE_URL,
+        },
+    ),
 ];
 
 #[must_use]
@@ -161,6 +198,10 @@ pub fn resolve_model_alias(model: &str) -> String {
                     _ => trimmed,
                 },
                 ProviderKind::OpenAi => trimmed,
+                ProviderKind::Nvidia => match *alias {
+                    "nvidia" => "meta/llama-3.3-70b-instruct",
+                    _ => trimmed,
+                },
             })
         })
         .map_or_else(|| trimmed.to_string(), ToOwned::to_owned)
@@ -181,6 +222,18 @@ pub fn metadata_for_model(model: &str) -> Option<ProviderMetadata> {
             default_base_url: openai_compat::DEFAULT_XAI_BASE_URL,
         });
     }
+    if lower.starts_with("meta/")
+        || lower.starts_with("qwen/")
+        || lower.starts_with("deepseek-ai/")
+        || lower.starts_with("nvidia/")
+    {
+        return Some(ProviderMetadata {
+            provider: ProviderKind::Nvidia,
+            auth_env: "NVIDIA_API_KEY",
+            base_url_env: "NVIDIA_BASE_URL",
+            default_base_url: openai_compat::DEFAULT_NVIDIA_BASE_URL,
+        });
+    }
     None
 }
 
@@ -197,6 +250,9 @@ pub fn detect_provider_kind(model: &str) -> ProviderKind {
     }
     if openai_compat::has_api_key("XAI_API_KEY") {
         return ProviderKind::Xai;
+    }
+    if openai_compat::has_api_key("NVIDIA_API_KEY") {
+        return ProviderKind::Nvidia;
     }
     ProviderKind::ClawApi
 }
@@ -220,11 +276,13 @@ mod tests {
         assert_eq!(resolve_model_alias("grok"), "grok-3");
         assert_eq!(resolve_model_alias("grok-mini"), "grok-3-mini");
         assert_eq!(resolve_model_alias("grok-2"), "grok-2");
+        assert_eq!(resolve_model_alias("nvidia"), "meta/llama-3.3-70b-instruct");
     }
 
     #[test]
     fn detects_provider_from_model_name_first() {
         assert_eq!(detect_provider_kind("grok"), ProviderKind::Xai);
+        assert_eq!(detect_provider_kind("nvidia"), ProviderKind::Nvidia);
         assert_eq!(
             detect_provider_kind("claude-sonnet-4-6"),
             ProviderKind::ClawApi

@@ -337,6 +337,7 @@ fn resolve_model_alias(model: &str) -> &str {
         "opus" => "claude-opus-4-6",
         "sonnet" => "claude-sonnet-4-6",
         "haiku" => "claude-haiku-4-5-20251213",
+        "nvidia" => "meta/llama-3.3-70b-instruct",
         _ => model,
     }
 }
@@ -673,6 +674,12 @@ fn format_model_report(model: &str, message_count: usize, turns: u32) -> String 
   Current model    {model}
   Session messages {message_count}
   Session turns    {turns}
+
+NVIDIA (API key only)
+  Export in shell   export NVIDIA_API_KEY=...
+  Models            meta/llama-3.3-70b-instruct
+                    qwen/qwen2.5-coder-32b-instruct
+                    deepseek-ai/deepseek-r1
 
 Usage
   Inspect current model with /model
@@ -3947,6 +3954,7 @@ mod tests {
         assert_eq!(resolve_model_alias("opus"), "claude-opus-4-6");
         assert_eq!(resolve_model_alias("sonnet"), "claude-sonnet-4-6");
         assert_eq!(resolve_model_alias("haiku"), "claude-haiku-4-5-20251213");
+        assert_eq!(resolve_model_alias("nvidia"), "meta/llama-3.3-70b-instruct");
         assert_eq!(resolve_model_alias("custom-opus"), "custom-opus");
     }
 
@@ -4267,6 +4275,9 @@ mod tests {
         assert!(report.contains("Model"));
         assert!(report.contains("Current model    sonnet"));
         assert!(report.contains("Session messages 12"));
+        assert!(report.contains("NVIDIA (API key only)"));
+        assert!(report.contains("export NVIDIA_API_KEY"));
+        assert!(report.contains("meta/llama-3.3-70b-instruct"));
         assert!(report.contains("Switch models with /model <name>"));
     }
 
